@@ -36,7 +36,8 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	token := utils.GenerateJWT(user.ID, user.Role)
+	userID := utils.ParseUint(user.ID)
+	token := utils.GenerateJWT(userID, user.Role)
 	
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "User registered successfully",
@@ -72,7 +73,8 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	token := utils.GenerateJWT(user.ID, user.Role)
+	userID := utils.ParseUint(user.ID)
+	token := utils.GenerateJWT(userID, user.Role)
 	
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Login successful",
