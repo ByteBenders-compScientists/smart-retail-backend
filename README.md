@@ -242,6 +242,8 @@ go run cmd/main.go
 6. ngrok for localhost
 ```bash
 ngrok http 8080
+
+# replace the mpesa callback with forwarding ngrok https generated
 ```
 
 ## Environment Variables
