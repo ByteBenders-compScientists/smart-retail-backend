@@ -220,7 +220,7 @@ go mod download
 
 3. Set up environment variables:
 ```bash
-cp .env.example .env
+nano .env
 # Edit .env with your configuration
 ```
 
@@ -232,6 +232,11 @@ go run cmd/migrate/main.go
 5. Start the server:
 ```bash
 go run cmd/main.go
+```
+
+6. ngrok for localhost
+```bash
+ngrok http 8080
 ```
 
 ## Environment Variables
@@ -255,11 +260,6 @@ The system uses the following main entities:
 - **SaleItems**: Line items for each sale
 
 ## Testing
-
-Run the test suite:
-```bash
-go test ./...
-```
 
 Run API tests:
 ```bash

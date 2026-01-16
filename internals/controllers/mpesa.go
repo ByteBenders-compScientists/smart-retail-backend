@@ -13,7 +13,7 @@ import (
 
 func InitiateMpesa(c *gin.Context) {
 	var body struct {
-		SaleID uint   `json:"sale_id" binding:"required"`
+		SaleID string `json:"sale_id" binding:"required"`
 		Phone  string `json:"phone" binding:"required"`
 	}
 
@@ -24,7 +24,7 @@ func InitiateMpesa(c *gin.Context) {
 
 	// Get sale details
 	var sale models.Sale
-	if err := db.DB.First(&sale, body.SaleID).Error; err != nil {
+	if err := db.DB.First(&sale, "id = ?", body.SaleID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Sale not found"})
 		return
 	}
@@ -37,9 +37,16 @@ func InitiateMpesa(c *gin.Context) {
 	// Initialize MPESA service
 	mpesaService := services.NewMpesaService()
 
-	// Initiate STK Push
-	response, err := mpesaService.InitiateSTKPush(body.Phone, float64(sale.Total), "SALE_"+strconv.Itoa(int(body.SaleID)))
+	// Validate MPESA configuration early so we fail fast with a clear message
+	if mpesaService.ConsumerKey == "" || mpesaService.ConsumerSecret == "" || mpesaService.Shortcode == "" || mpesaService.Passkey == "" || mpesaService.CallbackURL == "" {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "MPESA configuration is missing. Please set MPESA_CONSUMER_KEY, MPESA_CONSUMER_SECRET, MPESA_SHORTCODE, MPESA_PASSKEY, and MPESA_CALLBACK_URL"})
+		return
+	}
+
+	// Initiate STK Push using UUID sale reference
+	response, err := mpesaService.InitiateSTKPush(body.Phone, float64(sale.Total), "SALE_"+body.SaleID)
 	if err != nil {
+		utils.Logger.WithError(err).Error("Failed to initiate MPESA payment")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to initiate MPESA payment"})
 		return
 	}

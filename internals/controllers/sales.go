@@ -80,7 +80,7 @@ func CreateSale(c *gin.Context) {
 		}
 
 		var product models.Product
-		if err := tx.First(&product, item.ProductID).Error; err != nil {
+		if err := tx.First(&product, "id = ?", item.ProductID).Error; err != nil {
 			tx.Rollback()
 			c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
 			return
@@ -123,7 +123,7 @@ func CreateSale(c *gin.Context) {
 	if err := db.DB.
 		Preload("SaleItems.Product").
 		Preload("Branch").
-		First(&sale, sale.ID).Error; err != nil {
+		First(&sale, "id = ?", sale.ID).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load sale details"})
 		return
 	}
@@ -142,7 +142,7 @@ func GetSale(c *gin.Context) {
 		Preload("SaleItems.Product").
 		Preload("Branch").
 		Preload("User").
-		First(&sale, saleID).Error; err != nil {
+		First(&sale, "id = ?", saleID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Sale not found"})
 		return
 	}
@@ -211,7 +211,7 @@ func UpdateSaleStatus(c *gin.Context) {
 	}
 
 	var sale models.Sale
-	if err := db.DB.First(&sale, saleID).Error; err != nil {
+	if err := db.DB.First(&sale, "id = ?", saleID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Sale not found"})
 		return
 	}

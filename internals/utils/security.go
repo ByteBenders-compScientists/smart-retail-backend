@@ -18,7 +18,7 @@ func CheckPassword(p, hash string) bool {
 	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(p)) == nil
 }
 
-func GenerateJWT(userID uint, role string) string {
+func GenerateJWT(userID string, role string) string {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id": userID,
 		"role":    role,

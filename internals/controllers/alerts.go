@@ -220,7 +220,7 @@ func GetAlertSummary(c *gin.Context) {
 
 	// Get top 5 products with most low stock alerts
 	type ProductAlert struct {
-		ProductID   uint   `json:"product_id"`
+		ProductID   string `json:"product_id"`
 		ProductName string `json:"product_name"`
 		Brand       string `json:"brand"`
 		AlertCount  int64  `json:"alert_count"`
@@ -274,9 +274,9 @@ func calculateHealthScore(totalStock, lowStock, criticalStock int64) string {
 
 func CreateAlertRule(c *gin.Context) {
 	var body struct {
-		BranchID  uint `json:"branch_id" binding:"required"`
-		ProductID uint `json:"product_id" binding:"required"`
-		Threshold int  `json:"threshold" binding:"required"`
+		BranchID  string `json:"branch_id" binding:"required"`
+		ProductID string `json:"product_id" binding:"required"`
+		Threshold int    `json:"threshold" binding:"required"`
 	}
 
 	if err := c.ShouldBindJSON(&body); err != nil {
@@ -291,13 +291,13 @@ func CreateAlertRule(c *gin.Context) {
 
 	// Verify branch and product exist
 	var branch models.Branch
-	if err := db.DB.First(&branch, body.BranchID).Error; err != nil {
+	if err := db.DB.First(&branch, "id = ?", body.BranchID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Branch not found"})
 		return
 	}
 
 	var product models.Product
-	if err := db.DB.First(&product, body.ProductID).Error; err != nil {
+	if err := db.DB.First(&product, "id = ?", body.ProductID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
 		return
 	}

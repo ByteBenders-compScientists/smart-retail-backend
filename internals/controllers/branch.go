@@ -42,7 +42,7 @@ func GetBranch(c *gin.Context) {
 	branchID := c.Param("id")
 
 	var branch models.Branch
-	if err := db.DB.First(&branch, branchID).Error; err != nil {
+	if err := db.DB.First(&branch, "id = ?", branchID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Branch not found"})
 		return
 	}
@@ -54,7 +54,7 @@ func UpdateBranch(c *gin.Context) {
 	branchID := c.Param("id")
 
 	var branch models.Branch
-	if err := db.DB.First(&branch, branchID).Error; err != nil {
+	if err := db.DB.First(&branch, "id = ?", branchID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Branch not found"})
 		return
 	}
@@ -77,7 +77,7 @@ func DeleteBranch(c *gin.Context) {
 	branchID := c.Param("id")
 
 	var branch models.Branch
-	if err := db.DB.First(&branch, branchID).Error; err != nil {
+	if err := db.DB.First(&branch, "id = ?", branchID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Branch not found"})
 		return
 	}
@@ -146,7 +146,7 @@ func AddStockToBranch(c *gin.Context) {
 
 	// Check if product exists
 	var product models.Product
-	if err := db.DB.First(&product, body.ProductID).Error; err != nil {
+	if err := db.DB.First(&product, "id = ?", body.ProductID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
 		return
 	}

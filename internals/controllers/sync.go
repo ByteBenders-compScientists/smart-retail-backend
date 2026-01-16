@@ -304,7 +304,7 @@ func ResolveSyncConflict(c *gin.Context) {
 	}
 
 	var sale models.Sale
-	if err := db.DB.First(&sale, saleID).Error; err != nil {
+	if err := db.DB.First(&sale, "id = ?", saleID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Sale not found"})
 		return
 	}

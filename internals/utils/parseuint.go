@@ -1,8 +1,7 @@
 package utils
 
-import "strconv"
-
-func ParseUint(s string) uint {
-	v, _ := strconv.ParseUint(s, 10, 64)
-	return uint(v)
+// ParseUUID returns the provided string. Kept for backward compatibility
+// with earlier uint-based helpers; prefer using UUID strings directly.
+func ParseUUID(s string) string {
+	return s
 }

@@ -45,7 +45,7 @@ func RestockFromHQ(c *gin.Context) {
 
 	// Verify product exists
 	var product models.Product
-	if err := db.DB.First(&product, req.ProductID).Error; err != nil {
+	if err := db.DB.First(&product, "id = ?", req.ProductID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
 		return
 	}
@@ -169,7 +169,7 @@ func BulkRestockFromHQ(c *gin.Context) {
 
 		// Verify product exists
 		var product models.Product
-		if err := tx.First(&product, item.ProductID).Error; err != nil {
+		if err := tx.First(&product, "id = ?", item.ProductID).Error; err != nil {
 			tx.Rollback()
 			c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
 			return

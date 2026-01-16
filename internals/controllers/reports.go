@@ -245,7 +245,7 @@ func GetLowStockReport(c *gin.Context) {
 	var report []BranchLowStock
 	for branchID, items := range branchMap {
 		var branch models.Branch
-		db.DB.First(&branch, branchID)
+		db.DB.First(&branch, "id = ?", branchID)
 
 		report = append(report, BranchLowStock{
 			BranchID:      branchID,

@@ -29,16 +29,18 @@ func Register(c *gin.Context) {
 	}
 
 	user.Password = utils.HashPassword(user.Password)
-	user.Role = "customer"
+	// user.Role = "customer"
+	if user.Role == "" {
+		user.Role = "customer"
+	}
 
 	if err := db.DB.Create(&user).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
 		return
 	}
 
-	userID := utils.ParseUint(user.ID)
-	token := utils.GenerateJWT(userID, user.Role)
-	
+	token := utils.GenerateJWT(user.ID, user.Role)
+
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "User registered successfully",
 		"user": gin.H{
@@ -56,7 +58,7 @@ func Login(c *gin.Context) {
 		Email    string `json:"email" binding:"required,email"`
 		Password string `json:"password" binding:"required"`
 	}
-	
+
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
 		return
@@ -73,9 +75,8 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	userID := utils.ParseUint(user.ID)
-	token := utils.GenerateJWT(userID, user.Role)
-	
+	token := utils.GenerateJWT(user.ID, user.Role)
+
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Login successful",
 		"user": gin.H{

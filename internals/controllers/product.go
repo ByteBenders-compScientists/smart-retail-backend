@@ -40,9 +40,9 @@ func GetAllProducts(c *gin.Context) {
 
 func GetProduct(c *gin.Context) {
 	productID := c.Param("id")
-	
+
 	var product models.Product
-	if err := db.DB.First(&product, productID).Error; err != nil {
+	if err := db.DB.First(&product, "id = ?", productID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
 		return
 	}
@@ -52,9 +52,9 @@ func GetProduct(c *gin.Context) {
 
 func UpdateProduct(c *gin.Context) {
 	productID := c.Param("id")
-	
+
 	var product models.Product
-	if err := db.DB.First(&product, productID).Error; err != nil {
+	if err := db.DB.First(&product, "id = ?", productID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
 		return
 	}
@@ -81,9 +81,9 @@ func UpdateProduct(c *gin.Context) {
 
 func DeleteProduct(c *gin.Context) {
 	productID := c.Param("id")
-	
+
 	var product models.Product
-	if err := db.DB.First(&product, productID).Error; err != nil {
+	if err := db.DB.First(&product, "id = ?", productID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
 		return
 	}
@@ -122,7 +122,7 @@ func GetProductsByBrand(c *gin.Context) {
 
 func GetProductStockAcrossBranches(c *gin.Context) {
 	productID := c.Param("id")
-	
+
 	var stocks []models.Stock
 	if err := db.DB.
 		Preload("Branch").
@@ -140,9 +140,9 @@ func GetProductStockAcrossBranches(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"product_id":   productID,
-		"total_stock":  totalStock,
+		"product_id":    productID,
+		"total_stock":   totalStock,
 		"branch_stocks": stocks,
-		"branches":     len(stocks),
+		"branches":      len(stocks),
 	})
 }

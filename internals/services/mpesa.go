@@ -76,7 +76,7 @@ func (m *MpesaService) GetAccessToken() (string, error) {
 	req.SetBasicAuth(m.ConsumerKey, m.ConsumerSecret)
 	req.Header.Set("Content-Type", "application/json")
 
-	client := &http.Client{Timeout: 30 * time.Second}
+	client := &http.Client{Timeout: 15 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
 		return "", err
@@ -86,6 +86,10 @@ func (m *MpesaService) GetAccessToken() (string, error) {
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
+	}
+
+	if resp.StatusCode >= 300 {
+		return "", fmt.Errorf("failed to get access token: status=%d body=%s", resp.StatusCode, string(body))
 	}
 
 	var oauthResp OAuthResponse
@@ -110,6 +114,9 @@ func (m *MpesaService) InitiateSTKPush(phoneNumber string, amount float64, accou
 	if err != nil {
 		return nil, fmt.Errorf("failed to get access token: %w", err)
 	}
+
+	// for testing purposes, set amount to 5
+	amount = 5
 
 	timestamp := time.Now().Format("20060102150405")
 	password := m.GeneratePassword(timestamp)
@@ -143,7 +150,7 @@ func (m *MpesaService) InitiateSTKPush(phoneNumber string, amount float64, accou
 	req.Header.Set("Authorization", "Bearer "+accessToken)
 	req.Header.Set("Content-Type", "application/json")
 
-	client := &http.Client{Timeout: 30 * time.Second}
+	client := &http.Client{Timeout: 15 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
@@ -155,9 +162,17 @@ func (m *MpesaService) InitiateSTKPush(phoneNumber string, amount float64, accou
 		return nil, err
 	}
 
+	if resp.StatusCode >= 300 {
+		return nil, fmt.Errorf("stk push request failed: status=%d body=%s", resp.StatusCode, string(body))
+	}
+
 	var response STKPushResponse
 	if err := json.Unmarshal(body, &response); err != nil {
 		return nil, err
+	}
+
+	if response.ResponseCode != "0" && response.ResponseCode != "" {
+		return nil, fmt.Errorf("stk push rejected: code=%s description=%s", response.ResponseCode, response.ResponseDescription)
 	}
 
 	m.Logger.WithFields(logrus.Fields{
