@@ -97,6 +97,11 @@ After login, copy the token from the response and include it in the Authorizatio
 
 ```http
 Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+or
+
+# include cookie authentications
+{ credentials: 'include' }
 ```
 
 ### Admin Routes

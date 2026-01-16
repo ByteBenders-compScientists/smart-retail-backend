@@ -10,18 +10,34 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+const defaultAuthCookieName = "auth_token"
+
 func JWTAuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header required"})
-			c.Abort()
-			return
+		tokenString := ""
+
+		if authHeader != "" {
+			tokenString = strings.Replace(authHeader, "Bearer ", "", 1)
+			if tokenString == authHeader {
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "Bearer token required"})
+				c.Abort()
+				return
+			}
 		}
 
-		tokenString := strings.Replace(authHeader, "Bearer ", "", 1)
-		if tokenString == authHeader {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Bearer token required"})
+		if tokenString == "" {
+			cookieName := os.Getenv("JWT_COOKIE_NAME")
+			if cookieName == "" {
+				cookieName = defaultAuthCookieName
+			}
+			if cookie, err := c.Cookie(cookieName); err == nil {
+				tokenString = cookie
+			}
+		}
+
+		if tokenString == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization required"})
 			c.Abort()
 			return
 		}

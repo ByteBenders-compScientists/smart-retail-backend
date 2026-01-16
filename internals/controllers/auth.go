@@ -3,12 +3,29 @@ package controllers
 
 import (
 	"net/http"
+	"os"
+	"time"
 
 	"github.com/ByteBenders-compScientists/smart-retail-backend/internals/db"
 	"github.com/ByteBenders-compScientists/smart-retail-backend/internals/models"
 	"github.com/ByteBenders-compScientists/smart-retail-backend/internals/utils"
 	"github.com/gin-gonic/gin"
 )
+
+const defaultAuthCookieName = "auth_token"
+
+func setAuthCookie(c *gin.Context, token string) {
+	cookieName := os.Getenv("JWT_COOKIE_NAME")
+	if cookieName == "" {
+		cookieName = defaultAuthCookieName
+	}
+	secure := os.Getenv("COOKIE_SECURE") == "true"
+	maxAge := int((24 * time.Hour).Seconds())
+
+	// Lax avoids CSRF on GET while allowing same-site POST in typical SPA flows
+	c.SetSameSite(http.SameSiteLaxMode)
+	c.SetCookie(cookieName, token, maxAge, "/", "", secure, true)
+}
 
 func Register(c *gin.Context) {
 	var user models.User
@@ -40,6 +57,7 @@ func Register(c *gin.Context) {
 	}
 
 	token := utils.GenerateJWT(user.ID, user.Role)
+	setAuthCookie(c, token)
 
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "User registered successfully",
@@ -76,6 +94,7 @@ func Login(c *gin.Context) {
 	}
 
 	token := utils.GenerateJWT(user.ID, user.Role)
+	setAuthCookie(c, token)
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Login successful",
