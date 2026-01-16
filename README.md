@@ -243,7 +243,7 @@ ngrok http 8080
 
 Key environment variables required:
 
-- `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`: Database connection
+- `DB_URI`: Database connection
 - `JWT_SECRET`: Secret key for JWT token signing
 - `MPESA_CONSUMER_KEY`, `MPESA_CONSUMER_SECRET`: MPESA API credentials
 - `MPESA_SHORTCODE`, `MPESA_PASSKEY`: MPESA payment configuration
