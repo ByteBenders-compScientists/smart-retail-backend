@@ -1,3 +1,6 @@
 .env
 logs/*
 *.log
+test-api.sh
+*.exe
+logs/*

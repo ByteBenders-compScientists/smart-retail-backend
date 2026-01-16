@@ -12,31 +12,76 @@ import (
 
 func Register(c *gin.Context) {
 	var user models.User
-	c.BindJSON(&user)
+	if err := c.ShouldBindJSON(&user); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
+		return
+	}
+
+	if user.Name == "" || user.Email == "" || user.Password == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Name, email, and password are required"})
+		return
+	}
+
+	var existingUser models.User
+	if err := db.DB.Where("email = ?", user.Email).First(&existingUser).Error; err == nil {
+		c.JSON(http.StatusConflict, gin.H{"error": "Email already exists"})
+		return
+	}
 
 	user.Password = utils.HashPassword(user.Password)
 	user.Role = "customer"
 
-	db.DB.Create(&user)
-
-	c.JSON(http.StatusOK, gin.H{"message": "registered"})
-}
-
-func Login(c *gin.Context) {
-	var body struct {
-		Email    string
-		Password string
-	}
-	c.BindJSON(&body)
-
-	var user models.User
-	db.DB.Where("email = ?", body.Email).First(&user)
-
-	if !utils.CheckPassword(body.Password, user.Password) {
-		c.JSON(401, gin.H{"error": "invalid credentials"})
+	if err := db.DB.Create(&user).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
 		return
 	}
 
 	token := utils.GenerateJWT(user.ID, user.Role)
-	c.JSON(200, gin.H{"token": token})
+	
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "User registered successfully",
+		"user": gin.H{
+			"id":    user.ID,
+			"name":  user.Name,
+			"email": user.Email,
+			"role":  user.Role,
+		},
+		"token": token,
+	})
+}
+
+func Login(c *gin.Context) {
+	var body struct {
+		Email    string `json:"email" binding:"required,email"`
+		Password string `json:"password" binding:"required"`
+	}
+	
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
+		return
+	}
+
+	var user models.User
+	if err := db.DB.Where("email = ?", body.Email).First(&user).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+		return
+	}
+
+	if !utils.CheckPassword(body.Password, user.Password) {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+		return
+	}
+
+	token := utils.GenerateJWT(user.ID, user.Role)
+	
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Login successful",
+		"user": gin.H{
+			"id":    user.ID,
+			"name":  user.Name,
+			"email": user.Email,
+			"role":  user.Role,
+		},
+		"token": token,
+	})
 }

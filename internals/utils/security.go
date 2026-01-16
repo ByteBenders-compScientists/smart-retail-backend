@@ -28,3 +28,27 @@ func GenerateJWT(userID uint, role string) string {
 	t, _ := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
 	return t
 }
+
+func ValidateJWT(tokenString string) (jwt.MapClaims, error) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, jwt.ErrSignatureInvalid
+		}
+		return []byte(os.Getenv("JWT_SECRET")), nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !token.Valid {
+		return nil, jwt.ErrInvalidKey
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return nil, jwt.ErrInvalidKey
+	}
+
+	return claims, nil
+}

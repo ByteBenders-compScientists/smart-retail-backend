@@ -1,24 +1,21 @@
 package main
 
 import (
-	"log"
-
 	"github.com/ByteBenders-compScientists/smart-retail-backend/internals/api"
 	"github.com/ByteBenders-compScientists/smart-retail-backend/internals/db"
 	"github.com/ByteBenders-compScientists/smart-retail-backend/internals/initialisers"
-	"github.com/gin-gonic/gin"
+	"github.com/ByteBenders-compScientists/smart-retail-backend/internals/utils"
 )
 
 func init() {
 	initialisers.LoadEnv()
+	utils.InitLogger()
 	db.ConnectDB()
 }
 
 func main() {
-	r := gin.Default()
+	r := api.SetUpRoutes()
 
-	api.RegisterRoutes(r)
-
-	log.Println("Smart Retail running on http://localhost:8080")
+	utils.Logger.Info("Smart Retail server starting on http://localhost:8080")
 	r.Run(":8080")
 }
