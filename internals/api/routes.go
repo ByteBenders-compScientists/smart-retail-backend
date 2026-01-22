@@ -9,6 +9,14 @@ import (
 func SetUpRoutes() *gin.Engine {
 	r := gin.Default()
 
+	// Configure trusted proxies for security
+	// If not using a proxy/load balancer, disable proxy trust:
+	r.SetTrustedProxies(nil)
+	// If using a proxy/load balancer, specify trusted proxy IPs:
+	// r.SetTrustedProxies([]string{"127.0.0.1", "::1"})
+	// For cloud platforms (Cloudflare, AWS ALB, etc.), use TrustedPlatform:
+	// r.TrustedPlatform = gin.PlatformCloudflare
+
 	// cors middleware
 	r.Use(middlewares.CORSMiddleware())
 

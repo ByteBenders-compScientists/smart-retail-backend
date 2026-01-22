@@ -116,7 +116,7 @@ func (m *MpesaService) InitiateSTKPush(phoneNumber string, amount float64, accou
 	}
 
 	// for testing purposes, set amount to 5
-	amount = 5
+	amount = 0
 
 	timestamp := time.Now().Format("20060102150405")
 	password := m.GeneratePassword(timestamp)

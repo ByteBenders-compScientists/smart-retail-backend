@@ -224,25 +224,27 @@ func GetPaymentStatus(c *gin.Context) {
 
 	orderID := c.Param("orderId")
 
-	// Verify order belongs to user
-	var order models.Order
-	if err := db.DB.Where("id = ? AND user_id = ?", orderID, userID).First(&order).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Order not found"})
-		return
+	// Single joined lookup to verify ownership and fetch payment fields with minimal columns
+	var result struct {
+		Status        string  `json:"status"`
+		TransactionID *string `json:"transactionId"`
 	}
 
-	var payment models.Payment
-	if err := db.DB.Where("order_id = ?", orderID).First(&payment).Error; err != nil {
+	if err := db.DB.Table("payments").
+		Select("payments.status, payments.transaction_id").
+		Joins("JOIN orders ON orders.id = payments.order_id").
+		Where("payments.order_id = ? AND orders.user_id = ? AND orders.deleted_at IS NULL", orderID, userID).
+		Take(&result).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Payment not found"})
 		return
 	}
 
 	response := gin.H{
-		"status": payment.Status,
+		"status": result.Status,
 	}
 
-	if payment.TransactionID != nil {
-		response["transactionId"] = *payment.TransactionID
+	if result.TransactionID != nil {
+		response["transactionId"] = *result.TransactionID
 	}
 
 	c.JSON(http.StatusOK, response)
