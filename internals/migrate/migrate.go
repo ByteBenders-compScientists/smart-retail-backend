@@ -29,10 +29,15 @@ func main() {
 		&models.User{},
 		&models.Branch{},
 		&models.Product{},
-		&models.Stock{},
-		&models.Sale{},
-		&models.SaleItem{},
+		&models.BranchInventory{},
+		&models.Order{},
+		&models.OrderItem{},
+		&models.Payment{},
+		&models.RestockLog{},
 	)
 
 	fmt.Println("Database migration completed")
+	
+	// Seed initial data
+	seedData()
 }

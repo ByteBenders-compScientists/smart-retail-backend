@@ -13,7 +13,7 @@ import (
 func CORSMiddleware() gin.HandlerFunc {
 	corsOrigins := os.Getenv("CORS_ORIGINS")
 	if corsOrigins == "" {
-		corsOrigins = "http://localhost:3000,http://localhost:3001,http://localhost:5173,http://localhost:8080"
+		corsOrigins = "http://localhost:3000,http://localhost:3001,http://localhost:5173,http://localhost:8080,http://localhost:8081"
 	}
 
 	// Parse origins from comma-separated string

@@ -28,27 +28,36 @@ func setAuthCookie(c *gin.Context, token string) {
 }
 
 func Register(c *gin.Context) {
-	var user models.User
-	if err := c.ShouldBindJSON(&user); err != nil {
+	var body struct {
+		Name            string `json:"name" binding:"required"`
+		Email           string `json:"email" binding:"required,email"`
+		Phone           string `json:"phone" binding:"required"`
+		Password        string `json:"password" binding:"required"`
+		ConfirmPassword string `json:"confirmPassword" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
 		return
 	}
 
-	if user.Name == "" || user.Email == "" || user.Password == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Name, email, and password are required"})
+	if body.Password != body.ConfirmPassword {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Passwords do not match"})
 		return
 	}
 
 	var existingUser models.User
-	if err := db.DB.Where("email = ?", user.Email).First(&existingUser).Error; err == nil {
-		c.JSON(http.StatusConflict, gin.H{"error": "Email already exists"})
+	if err := db.DB.Where("email = ? OR phone = ?", body.Email, body.Phone).First(&existingUser).Error; err == nil {
+		c.JSON(http.StatusConflict, gin.H{"error": "Email or phone already exists"})
 		return
 	}
 
-	user.Password = utils.HashPassword(user.Password)
-	// user.Role = "customer"
-	if user.Role == "" {
-		user.Role = "customer"
+	user := models.User{
+		Name:     body.Name,
+		Email:    body.Email,
+		Phone:    body.Phone,
+		Password: utils.HashPassword(body.Password),
+		Role:     "customer",
 	}
 
 	if err := db.DB.Create(&user).Error; err != nil {
@@ -65,6 +74,7 @@ func Register(c *gin.Context) {
 			"id":    user.ID,
 			"name":  user.Name,
 			"email": user.Email,
+			"phone": user.Phone,
 			"role":  user.Role,
 		},
 		"token": token,
@@ -102,8 +112,42 @@ func Login(c *gin.Context) {
 			"id":    user.ID,
 			"name":  user.Name,
 			"email": user.Email,
+			"phone": user.Phone,
 			"role":  user.Role,
 		},
 		"token": token,
+	})
+}
+
+func Logout(c *gin.Context) {
+	cookieName := os.Getenv("JWT_COOKIE_NAME")
+	if cookieName == "" {
+		cookieName = defaultAuthCookieName
+	}
+	
+	c.SetCookie(cookieName, "", -1, "/", "", false, true)
+	c.JSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
+}
+
+func GetCurrentUser(c *gin.Context) {
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+
+	var user models.User
+	if err := db.DB.Where("id = ?", userID).First(&user).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"id":    user.ID,
+		"name":  user.Name,
+		"email": user.Email,
+		"phone": user.Phone,
+		"role":  user.Role,
+		"createdAt": user.CreatedAt,
 	})
 }
