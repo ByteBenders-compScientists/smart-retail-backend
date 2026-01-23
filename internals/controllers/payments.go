@@ -2,8 +2,10 @@
 package controllers
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/ByteBenders-compScientists/smart-retail-backend/internals/db"
@@ -149,13 +151,24 @@ func InitiateMpesaPayment(c *gin.Context) {
 }
 
 func MpesaCallback(c *gin.Context) {
-	// Log incoming callback
-	utils.Logger.Info("M-Pesa callback received")
+	// Log incoming callback with detailed information
+	utils.Logger.WithFields(map[string]interface{}{
+		"remote_addr": c.Request.RemoteAddr,
+		"user_agent":  c.Request.UserAgent(),
+		"method":      c.Request.Method,
+		"path":        c.Request.URL.Path,
+	}).Info("M-Pesa callback received")
 
 	var callback MpesaCallbackPayload
+	
+	// Read raw body for logging purposes
+	bodyBytes, _ := io.ReadAll(c.Request.Body)
+	c.Request.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+	
 	if err := c.ShouldBindJSON(&callback); err != nil {
 		utils.Logger.WithFields(map[string]interface{}{
-			"error": err.Error(),
+			"error":    err.Error(),
+			"raw_body": string(bodyBytes),
 		}).Error("Failed to parse M-Pesa callback payload")
 		// ALWAYS return 200 OK to M-Pesa to prevent retries
 		c.JSON(http.StatusOK, gin.H{"ResultCode": 0, "ResultDesc": "Accepted"})

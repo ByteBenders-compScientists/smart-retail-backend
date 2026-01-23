@@ -47,7 +47,7 @@ func SetUpRoutes() *gin.Engine {
 	}
 
 	// M-Pesa webhook (no authentication required)
-	api.POST("/payments/mpesa/callback", controllers.MpesaCallback)
+	api.POST("/mpesa/callback", controllers.MpesaCallback)
 
 	// protected routes
 	protected := api.Group("/")
