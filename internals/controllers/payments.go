@@ -162,7 +162,12 @@ func MpesaCallback(c *gin.Context) {
 	var callback MpesaCallbackPayload
 	
 	// Read raw body for logging purposes
-	bodyBytes, _ := io.ReadAll(c.Request.Body)
+	bodyBytes, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		utils.Logger.WithFields(map[string]interface{}{
+			"error": err.Error(),
+		}).Warn("Failed to read request body for logging")
+	}
 	c.Request.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 	
 	if err := c.ShouldBindJSON(&callback); err != nil {
