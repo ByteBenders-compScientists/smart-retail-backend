@@ -186,6 +186,16 @@ func MpesaCallback(c *gin.Context) {
 	}
 
 	tx := db.DB.Begin()
+	if tx.Error != nil {
+		utils.Logger.WithFields(map[string]interface{}{
+			"checkout_request_id": checkoutRequestID,
+			"order_id":            payment.OrderID,
+			"error":               tx.Error.Error(),
+		}).Error("Failed to begin database transaction")
+		// ALWAYS return 200 OK to M-Pesa
+		c.JSON(http.StatusOK, gin.H{"ResultCode": 0, "ResultDesc": "Accepted"})
+		return
+	}
 
 	// Update payment status
 	paymentStatus := "failed"
